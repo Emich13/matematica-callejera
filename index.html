@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Matemática Callejera</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: una columna angosta tipo cartel de góndola; la pregunta es una etiqueta de precio */
+:root{
+  --bg:#F3F4F6; --surface:#FFFFFF; --ink:#16181D; --muted:#5D6270; --line:#DADDE3;
+  --tag:#FFD60A; --tag-ink:#16181D; --red:#D7261C; --ok:#1F8A4C; --warn:#C27A00; --bad:#C0261C;
+  --display:"Anton","Impact","Arial Narrow Bold",sans-serif;
+  --body:"Barlow","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111317; --surface:#1B1E24; --ink:#ECEEF2; --muted:#9AA0AD; --line:#2C3038;
+  --tag:#F5CB00; --tag-ink:#16181D; --red:#FF5A4E; --ok:#4CC27F; --warn:#E8A93A; --bad:#FF6B5F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111317; --surface:#1B1E24; --ink:#ECEEF2; --muted:#9AA0AD; --line:#2C3038;
+  --tag:#F5CB00; --tag-ink:#16181D; --red:#FF5A4E; --ok:#4CC27F; --warn:#E8A93A; --bad:#FF6B5F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.01em;line-height:1.05;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,11vw,4rem);text-transform:uppercase}
+h2{font-size:1.7rem;text-transform:uppercase}
+h3{font-size:1.25rem}
+p{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.hero{display:flex;flex-direction:column;gap:10px}
+.hero h1 span{background:var(--tag);color:var(--tag-ink);padding:0 .15em}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.opts{display:flex;flex-direction:column;gap:12px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:84px}
+button{font:inherit;font-weight:700;cursor:pointer;border-radius:4px;border:2px solid var(--ink);background:transparent;color:var(--ink);padding:12px 16px;min-height:48px}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--bg)}
+button.sel{background:var(--tag);color:var(--tag-ink);border-color:var(--tag-ink)}
+button.ghost{border-color:var(--line);color:var(--muted);font-weight:600}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.95rem}
+.check input{width:20px;height:20px;margin-top:2px;accent-color:var(--red)}
+.rules{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.95rem}
+.rules dt{font-weight:700}
+.rules dd{margin:0;color:var(--muted)}
+
+/* Pregunta como etiqueta de precio */
+.progress{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.dots{display:flex;gap:4px;flex-wrap:wrap}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line);display:block}
+.dots i.done{background:var(--ink)}
+.dots i.now{background:var(--red)}
+.tag{background:var(--tag);color:var(--tag-ink);border-radius:6px;overflow:hidden;position:relative}
+.tag::before{content:"";position:absolute;right:16px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.tag .band{background:var(--red);color:#fff;font-weight:700;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;padding:6px 16px}
+.tag .q{padding:18px 44px 20px 16px;font-size:1.25rem;font-weight:500;line-height:1.35}
+.tag .q b{font-family:var(--mono);font-weight:600;white-space:nowrap}
+.timer{display:flex;flex-direction:column;gap:6px}
+.timer .row{display:flex;justify-content:space-between;align-items:baseline}
+.clock{font-size:1rem;color:var(--muted)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:background .3s}
+.answer{display:flex;gap:10px;align-items:stretch}
+.field{flex:1;min-width:0;display:flex;align-items:center;border:2px solid var(--ink);border-radius:4px;background:var(--surface);padding:0 12px}
+.field span{font-family:var(--mono);color:var(--muted);font-weight:600}
+.field input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:1.6rem;padding:10px 8px;outline:none}
+.hint{font-size:.85rem;color:var(--muted)}
+.err{color:var(--bad);font-size:.9rem;font-weight:600}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions button{flex:1}
+
+/* Feedback */
+.chip{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1.5px solid currentColor;white-space:nowrap}
+.v-clavado{color:var(--ok)} .v-bien{color:var(--ok)} .v-cerca{color:var(--warn)} .v-mal,.v-salteada{color:var(--bad)}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.steps li::marker{color:var(--red);font-weight:700}
+.score{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.score .big{font-family:var(--display);font-size:5rem;line-height:.9}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--mono);font-size:1.3rem}
+.stat small{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.cats{display:flex;flex-direction:column;gap:12px}
+.cat{display:grid;grid-template-columns:7.5em 1fr auto;gap:10px;align-items:center;font-size:.95rem}
+.cat .meter{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.cat .meter i{display:block;height:100%;background:var(--ink)}
+.diag{border-left:4px solid var(--red);padding:2px 0 2px 14px;display:flex;flex-direction:column;gap:8px}
+.items{display:flex;flex-direction:column;gap:12px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.item .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.item .pq{font-weight:500;min-width:0}
+.item .pq b{font-family:var(--mono);font-weight:600}
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:.9rem}
+.cmp div{display:flex;flex-direction:column}
+.cmp small{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.cmp b{font-family:var(--mono);font-weight:600}
+details summary{cursor:pointer;font-weight:700;color:var(--red);font-size:.95rem}
+details[open] summary{margin-bottom:8px}
+.idea{margin-bottom:10px}
+.hist{font-size:.9rem;display:flex;flex-direction:column;gap:4px}
+@media (max-width:420px){.stats{grid-template-columns:1fr 1fr 1fr}.cat{grid-template-columns:6em 1fr auto}.tag .q{font-size:1.12rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const fmt=(n,d=0)=>Number(n).toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:0});
+const nice=P=>{const mag=Math.pow(10,Math.floor(Math.log10(Math.abs(P)))-1);return Math.round(P/mag)*mag};
+const r1=x=>Math.round(x*10)/10;
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+const CATS={
+  ofertas:{name:'Ofertas',rule:'10% = correr la coma un lugar. "NxM" te descuenta (N−M)/N. "2da al X%" te descuenta X/2.'},
+  dolar:{name:'Dólar y viajes',rule:'Pensá el dólar redondo: 1.500 = 1.000 + la mitad. Si vendés dólares, gana la casa que paga más; si comprás, la que cobra menos. La diferencia por dólar × cantidad es lo que ganás. Peso chileno → argentino: buscá el factor (≈ 1,5) y multiplicá.'},
+  inflacion:{name:'Inflación',rule:'Acumulada ≈ suma simple + (suma)²/200. Un precio se duplica en 72 ÷ tasa meses. Cuotas: valen ≈ espera promedio × inflación.'},
+  cotidiano:{name:'Día a día',rule:'Dividir la cuenta: a cada uno le toca total ÷ personas; el que pagó recibe lo que puso menos su parte. Sacar IVA es ×0,83, no restar 21%. Por kilo: cuántos paquetes entran en 1.000 g. Sube a% y baja b% ≈ a − b − a×b/100.'}
+};
+const RATES=[1380,1420,1450,1480,1520,1560];
+
+const G={
+ desc(){const it=pick([['Zapatillas',[60,190]],['Campera',[50,160]],['Licuadora',[45,120]],['Auriculares',[25,90]],['Silla de oficina',[90,260]]]);
+  const P=rnd(it[1][0],it[1][1])*1000-pick([0,10,100,510]);const pct=pick([10,15,20,25,30,40]);const R=nice(P);const ans=P*(1-pct/100);
+  const s=[`Redondeá antes de operar: $${fmt(P)} ≈ $${fmt(R)}.`];
+  if(pct===25){s.push(`25% es un cuarto: dividí por 2 dos veces → ${fmt(R/2)} → ${fmt(R/4)}.`,`Restá: ${fmt(R)} − ${fmt(R/4)} = $${fmt(R*.75)}. Exacto: $${fmt(ans)}.`)}
+  else{const t=R/10;s.push(`El 10% de ${fmt(R)} es dividir por 10 (correr la coma un lugar): ${fmt(t)}.`,`Querés el ${pct}%, que es ${fmt(pct/10,1)} veces el 10%: ${fmt(pct/10,1)} × ${fmt(t)} = ${fmt(t*pct/10)}. Eso es lo que te descuentan.`,`Al precio le restás el descuento: ${fmt(R)} − ${fmt(t*pct/10)} ≈ $${fmt(R-t*pct/10)}. (Exacto: $${fmt(ans)}.)`)}
+  s.push(`Atajo para cuando le agarres la mano: si te descuentan ${pct}%, pagás el ${100-pct}% restante. Es multiplicar el precio por 0,${String(100-pct).padStart(2,'0')}.`);
+  return{cat:'ofertas',prompt:`${it[0]} a <b>$${fmt(P)}</b> con <b>${pct}% off</b>. ¿Cuánto pagás?`,unit:'$',ans,target:20,tol:{rel:[.02,.05]},steps:s}},
+ grupos(){const o=pick([[2,1],[3,2],[4,3]]);const[T,Pa]=o;const k=rnd(1,3),r=rnd(1,T-1);const q=T*k+r;
+  const it=pick(['Yogur','Alfajor','Gaseosa 2,25 L','Paquete de fideos','Lata de atún']);const P=rnd(9,45)*100-pick([10,0,50]);const R=nice(P);const pay=k*Pa+r;const ans=pay*P;
+  const s=[`Armá grupos de ${T}: ${q} = ${k} grupo${k>1?'s':''} + ${r} suelta${r>1?'s':''}.`,`Por cada grupo pagás ${Pa}. Las sueltas van a precio lleno. Pagás ${k}×${Pa} + ${r} = ${pay} unidades.`,`Redondeá $${fmt(P)} ≈ $${fmt(R)}. ${pay} × ${fmt(R)} ≈ $${fmt(pay*R)}. Exacto: $${fmt(ans)}.`,`La trampa: las sueltas no tienen descuento. Llevá múltiplos de ${T} o dejá la suelta.`];
+  return{cat:'ofertas',prompt:`${it} a <b>$${fmt(P)}</b>, oferta <b>${T}x${Pa}</b>. Llevás <b>${q}</b> unidades. ¿Cuánto pagás en total?`,unit:'$',ans,target:25,tol:{rel:[.02,.05]},steps:s}},
+ ofertaPct(){const o=pick([{t:'2x1',p:50,n:[2,1]},{t:'3x2',p:100/3,n:[3,2]},{t:'4x3',p:25,n:[4,3]},{t:'6x5',p:100/6,n:[6,5]},{t:'2da unidad al 50%',p:25,x:50},{t:'2da unidad al 70%',p:35,x:70},{t:'2da unidad al 80%',p:40,x:80}]);
+  let s;if(o.n){const[N,M]=o.n;s=[`Llevás ${N}, pagás ${M}: te regalan ${N-M} de cada ${N}.`,`${N-M} ÷ ${N} = ${fmt(o.p,1)}% de descuento.`]}
+  else{s=[`Por 2 unidades pagás 1 + ${fmt(1-o.x/100,1)} = ${fmt(2-o.x/100,1)} unidades.`,`El ${o.x}% de descuento se reparte entre 2 → ${o.x}/2 = ${fmt(o.p)}%.`]}
+  s.push('Comparación clave: 2x1 (50%) > 2da al 80% (40%) > 2da al 70% (35%) > 3x2 (33%) > 2da al 50% (25%) = 4x3.');
+  return{cat:'ofertas',prompt:`¿Qué % de descuento real te da un <b>${o.t}</b>? (llevando justo lo que pide la oferta)`,unit:'%',ans:o.p,target:15,tol:{abs:[1,3]},steps:s}},
+ segunda(){const X=pick([50,70,80]);const P=rnd(30,140)*100-pick([10,0,50]);const R=nice(P);const ans=P*(1-X/200);const f=1-X/200;
+  const s=[`"2da al ${X}%" = ${X}/2 = ${fmt(X/2)}% de descuento promedio.`,`Redondeá $${fmt(P)} ≈ $${fmt(R)}.`,`${fmt(R)} × ${fmt(f,2)} ≈ $${fmt(R*f)}. Exacto: $${fmt(ans)}.`,`Ojo: solo vale si llevás 2. Con 1 sola no hay descuento.`];
+  return{cat:'ofertas',prompt:`Shampoo a <b>$${fmt(P)}</b>, <b>2da unidad al ${X}%</b>. Llevás 2. ¿Cuánto te sale <i>cada una</i> en promedio?`,unit:'$',ans,target:25,tol:{rel:[.02,.05]},steps:s}},
+ dolarAPesos(){const rate=pick(RATES);const usd=rnd(15,240);const ans=usd*rate;const d=1500-rate;
+  const s=[`Pensá el dólar a 1.500: ${usd} × 1.000 = ${fmt(usd*1000)}, más la mitad (${fmt(usd*500)}) = ${fmt(usd*1500)}.`,
+   d>0?`El dólar está ${d} abajo de 1.500 → restá ${usd} × ${d} ≈ ${fmt(usd*d)}.`:`El dólar está ${-d} arriba de 1.500 → sumá ${usd} × ${-d} ≈ ${fmt(-usd*d)}.`,
+   `Resultado ≈ $${fmt(ans)}.`,`Para ir rápido, quedate con el primer paso: ya tenés el orden de magnitud correcto.`];
+  return{cat:'dolar',prompt:`Supongamos el dólar a <b>$${fmt(rate)}</b>. Algo cuesta <b>US$ ${usd}</b>. ¿Cuántos pesos son?`,unit:'$',ans,target:25,tol:{rel:[.02,.05]},steps:s}},
+ pesosADolar(){const rate=pick(RATES);const pesos=rnd(5,90)*10000+pick([0,5000]);const ans=pesos/rate;const k=pesos/1000;
+  const s=[`Dividí por 1.000: ${fmt(k)} mil.`,`Dividir por 1,5 es multiplicar por 2/3: ${fmt(k)} × 2 ÷ 3 ≈ ${fmt(k*2/3)}.`,`El dólar real (${fmt(rate)}) es ${rate<1500?'más barato':'más caro'} que 1.500, así que te dan ${rate<1500?'un poco más':'un poco menos'}: ≈ US$ ${fmt(ans)}.`];
+  return{cat:'dolar',prompt:`Supongamos el dólar a <b>$${fmt(rate)}</b>. Tenés <b>$${fmt(pesos)}</b>. ¿Cuántos dólares comprás?`,unit:'US$',ans,target:25,tol:{rel:[.03,.07]},steps:s}},
+ compara(){const rate=pick(RATES);const X=rnd(4,40)*10;const ex=pick([-15,10,25,40,60,90]);const Y=Math.round(X*rate*(1+ex/100)/1000)*1000;const base=X*rate;const ans=(Y/base-1)*100;
+  const s=[`Pasá el precio de afuera a pesos: ${X} × 1.500 = ${fmt(X*1500)}, ajustado a ${fmt(rate)} ≈ ${fmt(base)}.`,`Dividí: ${fmt(Y)} ÷ ${fmt(base)} ≈ ${fmt(Y/base,2)}.`,`Restá 1 y pasá a %: ${fmt(ans,1)}% ${ans>=0?'más caro acá':'más barato acá'}.`];
+  return{cat:'dolar',prompt:`Dólar a <b>$${fmt(rate)}</b>. Una consola cuesta <b>US$ ${X}</b> afuera y <b>$${fmt(Y)}</b> acá. ¿Qué % más cara es acá? <span class="hint">(negativo si es más barata)</span>`,unit:'%',ans,target:40,tol:{abs:[3,7]},steps:s}},
+ chile(){const clp=pick([900,950,1000]);const rate=pick(RATES);const it=pick([['Zapatillas',[60,160]],['Campera',[80,250]],['Notebook',[450,900]],['Perfume',[50,130]],['Valija',[60,180]]]);
+  const C=rnd(it[1][0],it[1][1])*1000-10;const f=rate/clp;const inAR=C*f;const ex=pick([-20,-10,15,30,50,80]);const H=Math.round(inAR*(1+ex/100)/1000)*1000;const ans=H-inAR;
+  const fr=Math.round(f*10)/10;const Cr=nice(C);
+  const s=[`Sacá el factor entre las dos monedas: 1 peso chileno = ${fmt(rate)} ÷ ${fmt(clp)} ≈ ${fmt(f,2)} pesos argentinos. Redondeá a ${fmt(fr,1)}.`,
+   `Pasá el precio de Chile: ${fmt(Cr)} × ${fmt(fr,1)} ≈ $${fmt(Cr*fr)} argentinos.${fr===1.5?' (×1,5 = el número más su mitad.)':''}`,
+   `Compará con el precio de acá: ${fmt(H)} − ${fmt(Cr*fr)} ≈ ${H-Cr*fr<0?'−':''}$${fmt(Math.abs(H-Cr*fr))}. Exacto: ${ans<0?'−':''}$${fmt(Math.abs(ans))}.`,
+   ans>0?`Positivo: conviene comprar en Chile.`:`Negativo: conviene comprar acá.`,
+   `En la vida real sumale lo que te cobren al pagar con tarjeta afuera y fijate si entra en la franquicia de la aduana.`];
+  return{cat:'dolar',prompt:`Supongamos US$ 1 = <b>${fmt(clp)} pesos chilenos</b> = <b>$${fmt(rate)} argentinos</b>. ${it[0]}: <b>CLP ${fmt(C)}</b> en Chile o <b>$${fmt(H)}</b> acá. ¿Cuántos pesos argentinos ahorrás comprando en Chile? <span class="hint">(negativo si sale más caro allá)</span>`,unit:'$',ans,target:45,tol:{abs:[inAR*.03,inAR*.07]},steps:s}},
+ casas(){const sell=Math.random()<.5;const base=pick(RATES);const x=base+rnd(-25,25);let y=x+pick([-1,1])*rnd(8,40);const N=pick([100,200,300,500,1000]);
+  const d=y-x;const ans=sell?N*d:-N*d;const better=ans>0?'B':'A';
+  const s=[sell?'Vos VENDÉS dólares: te conviene la casa que te los paga más caro.':'Vos COMPRÁS dólares: te conviene la casa que te los cobra más barato.',
+   `Diferencia por dólar: ${fmt(Math.max(x,y))} − ${fmt(Math.min(x,y))} = ${fmt(Math.abs(d))} pesos.`,
+   `Por ${fmt(N)} dólares: ${fmt(Math.abs(d))} × ${fmt(N)} = $${fmt(Math.abs(ans))}.`,
+   `La mejor es la ${better}, así que ir a la B ${ans>0?'te hace ganar':'te hace perder'} → ${ans>0?'':'−'}${fmt(Math.abs(ans))}.`,
+   `Truco para no confundirte: preguntate "¿quién pone los pesos?". Si los ponés vos (comprás), querés poner menos. Si te los dan a vos (vendés), querés recibir más.`];
+  return{cat:'dolar',prompt:`Querés <b>${sell?'vender':'comprar'} US$ ${fmt(N)}</b>. La casa A ${sell?'te lo toma':'te lo vende'} a <b>$${fmt(x)}</b> y la casa B a <b>$${fmt(y)}</b>. ¿Cuántos pesos ganás yendo a la B en vez de la A? <span class="hint">(negativo si perdés)</span>`,unit:'$',ans,target:30,tol:{abs:[N*2,N*5]},steps:s}},
+ brecha(){const c=pick(RATES)-rnd(0,20);const v=c+pick([20,30,40,50,60,80]);const ans=(v-c)/v*100;const N=1000;
+  const s=['Si comprás y enseguida vendés, comprás caro (venta) y te lo toman barato (compra).',
+   `Perdés ${fmt(v-c)} pesos por dólar, sobre los ${fmt(v)} que pusiste.`,
+   `${fmt(v-c)} ÷ ${fmt(v)}: como ${fmt(v)} ≈ 1.500, cada 15 pesos son 1%. ${fmt(v-c)} ÷ 15 ≈ ${fmt((v-c)/15,1)}%. Exacto: ${fmt(ans,1)}%.`,
+   'Esa brecha es lo que te cobra la casa por cambiar. Para comparar casas, la de brecha más chica es la más justa.'];
+  return{cat:'dolar',prompt:`Una casa de cambio compra el dólar a <b>$${fmt(c)}</b> y lo vende a <b>$${fmt(v)}</b>. Si comprás dólares y al rato te arrepentís y los vendés ahí mismo, ¿qué % de tu plata perdiste?`,unit:'%',ans,target:30,tol:{abs:[.4,1]},steps:s}},
+ splitPagos(){const n=pick([3,4,5]);const names=['Ana','Beto','Caro','Dani','Ema'].slice(0,n);const a=rnd(40,120)*1000+pick([0,500]);const b=rnd(8,35)*1000;const T=a+b;const sh=T/n;const ans=a-sh;
+  const s=[`Total gastado: ${fmt(a)} + ${fmt(b)} = $${fmt(T)}.`,`A cada uno le toca: ${fmt(T)} ÷ ${n} ≈ $${fmt(sh)}.`,
+   `Ana puso ${fmt(a)} pero solo le correspondía ${fmt(sh)}: tiene que recibir ${fmt(a)} − ${fmt(sh)} = $${fmt(ans)}.`,
+   b<sh?`Beto puso ${fmt(b)} y le tocaba ${fmt(sh)}: todavía debe ${fmt(sh-b)}. Los que no pusieron nada pagan ${fmt(sh)} cada uno. Todo eso va para Ana.`:`Beto puso más de su parte, así que también recibe ${fmt(b-sh)}.`,
+   'Regla: lo que cada uno recibe (o paga) = lo que puso − lo que le toca. La suma de todo eso siempre da cero.'];
+  return{cat:'cotidiano',prompt:`Salen ${n} amigos. <b>Ana pagó la cena: $${fmt(a)}</b>. <b>Beto pagó las bebidas: $${fmt(b)}</b>. ${names.slice(2).join(n>3?', ':'').replace(/, ([^,]*)$/,' y $1')} no pusieron nada. Para quedar parejos, ¿cuánto tiene que recibir Ana en total?`,unit:'$',ans,target:40,tol:{rel:[.02,.05]},steps:s}},
+ splitNoToma(){const n=pick([4,5,6]);const F=rnd(30,90)*1000;const D=rnd(12,40)*1000;const ans=F/n+D/(n-1);
+  const s=[`Separá la cuenta en dos: comida (la comparten ${n}) y bebida (la comparten ${n-1}).`,`Comida por persona: ${fmt(F)} ÷ ${n} ≈ ${fmt(F/n)}.`,`Bebida por persona: ${fmt(D)} ÷ ${n-1} ≈ ${fmt(D/(n-1))}.`,`Cada uno de los que tomaron paga ${fmt(F/n)} + ${fmt(D/(n-1))} ≈ $${fmt(ans)}. El que no tomó paga solo ${fmt(F/n)}.`];
+  return{cat:'cotidiano',prompt:`Cena de ${n} amigos: <b>comida $${fmt(F)}</b> y <b>bebida $${fmt(D)}</b>. Uno no tomó nada y no paga bebida. ¿Cuánto paga cada uno de los que tomaron?`,unit:'$',ans,target:40,tol:{rel:[.02,.05]},steps:s}},
+ inflAcum(){const m=pick([2,2.5,3,4,5]);const n=pick([3,6,12]);const ans=(Math.pow(1+m/100,n)-1)*100;const x=n*m;
+  const s=[`Suma simple: ${n} × ${fmt(m,1)}% = ${fmt(x,1)}%.`,`Sumale el "interés sobre interés": ${fmt(x,1)}² ÷ 200 = ${fmt(x*x/200,1)}.`,`Total ≈ ${fmt(x+x*x/200,1)}%. Exacto: ${fmt(ans,1)}%.`,`Si solo sumás, siempre te quedás corto. Cuanto más largo el plazo, más corto.`];
+  return{cat:'inflacion',prompt:`Inflación de <b>${fmt(m,1)}% mensual</b> durante <b>${n} meses</b>. ¿Cuánto suben los precios en total?`,unit:'%',ans,target:30,tol:{rel:[.03,.08]},steps:s}},
+ duplica(){const m=pick([2,3,4,6,8,9]);const ans=Math.log(2)/Math.log(1+m/100);
+  const s=[`Regla del 72: 72 ÷ ${m} = ${fmt(72/m,1)} meses.`,`Exacto: ${fmt(ans,1)} meses.`,`Sirve para todo lo compuesto: inflación, plazo fijo, deudas de tarjeta.`];
+  return{cat:'inflacion',prompt:`Con inflación de <b>${m}% mensual</b>, ¿en cuántos meses se duplica un precio?`,unit:'meses',ans,target:20,tol:{rel:[.06,.12]},steps:s}},
+ precioFut(){const m=pick([3,4,5]);const n=pick([3,6]);const P=rnd(25,140)*1000-pick([0,100,500]);const R=nice(P);const ans=P*Math.pow(1+m/100,n);const x=n*m;const y=x+x*x/200;
+  const s=[`Acumulada ≈ ${n}×${m} = ${x}% + ${x}²/200 (${fmt(x*x/200,1)}) ≈ ${fmt(y,1)}%.`,`Redondeá $${fmt(P)} ≈ $${fmt(R)}.`,`${fmt(R)} × ${fmt(1+y/100,2)} ≈ $${fmt(R*(1+y/100))}. Exacto: $${fmt(ans)}.`];
+  return{cat:'inflacion',prompt:`El súper del mes te sale <b>$${fmt(P)}</b>. Con inflación de <b>${m}% mensual</b>, ¿cuánto te va a salir en <b>${n} meses</b>?`,unit:'$',ans,target:40,tol:{rel:[.02,.05]},steps:s}},
+ cuotas(){const n=pick([3,6,12]);const m=pick([2,3,4]);let pv=0;for(let k=1;k<=n;k++)pv+=1/Math.pow(1+m/100,k);const ans=(1-pv/n)*100;const w=(n+1)/2;
+  const s=[`La plata se queda con vos, en promedio, (${n}+1)/2 = ${fmt(w,1)} meses.`,`Ahorro ≈ ${fmt(w,1)} × ${m}% = ${fmt(w*m,1)}%.`,`Como es descontar (no sumar), el valor real es un poco menor: exacto ${fmt(ans,1)}%.`,`Decisión: si el descuento por pagar contado es mayor a ${fmt(ans,0)}%, pagá contado. Si es menor, conviene la tarjeta.`];
+  return{cat:'inflacion',prompt:`<b>${n} cuotas sin interés</b> (la primera el mes que viene), inflación <b>${m}% mensual</b>. ¿Qué % de descuento contado equivale?`,unit:'%',ans,target:40,tol:{abs:[1,2.5]},steps:s}},
+ sueldoReal(){const sv=rnd(8,40);const iv=Math.max(3,sv+pick([-12,-8,-5,5,8,12,15]));const ans=((1+sv/100)/(1+iv/100)-1)*100;
+  const s=[`Aproximá: ${sv}% − ${iv}% = ${sv-iv}%.`,`Corregí: dividí por (1 + inflación) → ${sv-iv} ÷ ${fmt(1+iv/100,2)} ≈ ${fmt(ans,1)}%.`,`Con inflación baja alcanza la resta. Con inflación alta, la resta exagera.`];
+  return{cat:'inflacion',prompt:`En el año tu sueldo subió <b>${sv}%</b> y la inflación fue <b>${iv}%</b>. ¿Cuánto ${sv>=iv?'ganaste':'perdiste'} de poder de compra? <span class="hint">(negativo si perdiste)</span>`,unit:'%',ans,target:30,tol:{abs:[.8,2]},steps:s}},
+ propina(){const T=rnd(280,1900)*100;const n=pick([3,4,5,6]);const ans=T*1.1/n;const tt=T*1.1;const R=nice(tt);
+  const s=[`10% = correr la coma: ${fmt(T/10)}. Total con propina: ${fmt(tt)}.`,`Redondeá ≈ ${fmt(R)}.`,`Dividí: ${fmt(R)} ÷ ${n} ≈ $${fmt(R/n)}. Exacto: $${fmt(ans)}.`,n===4?'÷4 = mitad de la mitad.':n===5?'÷5 = ×2 y correr la coma.':n===6?'÷6 = mitad y después ÷3.':'÷3: buscá un número cercano que sea múltiplo de 3.'];
+  return{cat:'cotidiano',prompt:`Cuenta del bar: <b>$${fmt(T)}</b>. Suman <b>10% de propina</b> y dividen entre <b>${n}</b>. ¿Cuánto pone cada uno?`,unit:'$',ans,target:30,tol:{rel:[.02,.05]},steps:s}},
+ iva(){const P=rnd(12,250)*1000-pick([0,10,100]);const R=nice(P);const ans=P/1.21;
+  const s=[`Sacar el IVA NO es restar 21%: es dividir por 1,21.`,`Dividir por 1,21 ≈ restar 17% (o ×0,83).`,`Redondeá ≈ ${fmt(R)}. 10% = ${fmt(R/10)}, 7% ≈ ${fmt(R*.07)} → ${fmt(R)} − ${fmt(R*.17)} ≈ $${fmt(R*.83)}. Exacto: $${fmt(ans)}.`];
+  return{cat:'cotidiano',prompt:`Una factura dice <b>$${fmt(P)}</b> con IVA (21%). ¿Cuánto es sin IVA?`,unit:'$',ans,target:30,tol:{rel:[.02,.05]},steps:s}},
+ kilo(){const g=pick([200,250,300,400,500,750]);const it=pick(['queso','jamón cocido','café','almendras','yerba especial']);const P=rnd(20,160)*100-pick([0,10,50]);const R=nice(P);const ans=P*1000/g;
+  const how={200:'En 1 kg entran 5 paquetes: ×5 (= ×10 ÷ 2).',250:'En 1 kg entran 4: ×4 (doblar dos veces).',300:'1.000 ÷ 300 = 3,33: ×10 ÷ 3.',400:'En 1 kg entran 2,5: ×10 ÷ 4.',500:'Medio kilo: ×2.',750:'750 g son ¾ kg: ÷3 y ×4.'}[g];
+  const s=[how,`Redondeá $${fmt(P)} ≈ $${fmt(R)} → ≈ $${fmt(R*1000/g)} el kilo. Exacto: $${fmt(ans)}.`,'Comparar por kilo desarma el truco de los envases "chicos y baratos".'];
+  return{cat:'cotidiano',prompt:`<b>${g} g</b> de ${it} a <b>$${fmt(P)}</b>. ¿A cuánto está el kilo?`,unit:'$',ans,target:25,tol:{rel:[.02,.05]},steps:s}},
+ subeBaja(){const u=pick([20,30,40,50,100]);const d=pick([20,25,30,40,50]);const ans=((1+u/100)*(1-d/100)-1)*100;
+  const s=[`No se cancelan: el % de bajada se aplica sobre un número más grande (o más chico).`,`Fórmula rápida: +a y −b → a − b − a×b/100.`,`${u} − ${d} − ${u}×${d}/100 = ${u} − ${d} − ${fmt(u*d/100)} = ${fmt(ans,1)}%.`];
+  return{cat:'cotidiano',prompt:`Un producto sube <b>${u}%</b> y después lo bajan <b>${d}%</b>. ¿Qué % cambió respecto del precio original? <span class="hint">(negativo si quedó más barato)</span>`,unit:'%',ans,target:30,tol:{abs:[1,3]},steps:s}}
+};
+const IDEAS={
+ desc:'Un descuento del X% es: calcular cuánto es ese X% del precio y restárselo.',
+ grupos:'En un "TxP", por cada T unidades que llevás pagás solo P. Las unidades que no completan un grupo las pagás enteras.',
+ ofertaPct:'El descuento real es: lo que te regalan dividido lo que te llevás.',
+ segunda:'Pagás una entera y la otra con descuento. Sumás lo que pagás por las dos y dividís por 2.',
+ dolarAPesos:'Dólares a pesos = multiplicar por la cotización. Con un número redondo como 1.500 es fácil: cada dólar son mil pesos más quinientos.',
+ pesosADolar:'Pesos a dólares = dividir por la cotización. Dividir por 1.500 es dividir por mil y después por 1,5.',
+ compara:'Pasás el precio de afuera a pesos y te fijás cuántas veces más grande es el de acá.',
+ inflAcum:'Cada mes los precios suben sobre lo que ya habían subido. Por eso el total es un poco más que sumar los meses.',
+ duplica:'Atajo de memoria: 72 dividido la tasa = cuántos períodos tarda algo en duplicarse.',
+ precioFut:'Primero estimás cuánto suben los precios en total. Después le sumás ese % al precio de hoy.',
+ cuotas:'Las cuotas futuras valen menos porque la inflación se las come. Pagar en cuotas sin interés equivale a un descuento.',
+ sueldoReal:'Lo que ganaste de verdad es cuánto subió tu sueldo comparado con cuánto subieron los precios.',
+ propina:'Sumás el 10% a la cuenta y dividís el total entre la cantidad de personas.',
+ iva:'Precio con IVA = precio sin IVA × 1,21. Para volver atrás se divide por 1,21. Restar 21% da mal porque ese 21% se calculó sobre el precio más chico.',
+ kilo:'Calculás cuántos paquetes así hacen falta para juntar 1 kilo (1.000 g) y multiplicás el precio por esa cantidad.',
+chile:'Pasás el precio de Chile a pesos argentinos con un factor fijo (cuántos pesos argentinos vale 1 peso chileno) y lo comparás con el de acá.',
+ casas:'Lo que importa es la diferencia por dólar entre las dos casas, multiplicada por cuántos dólares cambiás. El signo depende de si comprás o vendés.',
+ brecha:'La casa te vende caro y te compra barato. Esa diferencia, comparada con lo que pusiste, es lo que perdés por ida y vuelta.',
+ splitPagos:'A todos les toca lo mismo: total ÷ personas. El que pagó de más recibe la diferencia entre lo que puso y lo que le tocaba.',
+ splitNoToma:'Cada gasto se divide solo entre los que lo usaron. Lo calculás por separado y sumás.',
+ subeBaja:'El segundo % se aplica sobre el precio ya cambiado, por eso subir y bajar lo mismo no se cancela.'
+};
+const GENS={ofertas:['desc','grupos','ofertaPct','segunda'],dolar:['dolarAPesos','pesosADolar','compara','chile','casas','brecha'],inflacion:['inflAcum','duplica','precioFut','cuotas','sueldoReal'],cotidiano:['propina','splitPagos','splitNoToma','iva','kilo','subeBaja']};
+
+function parseNum(raw){
+  let s=String(raw).trim().toLowerCase().replace(/\s+/g,'').replace(/us\$|u\$s|usd|\$|%|meses|mes/g,'');
+  let mult=1;
+  if(/k$/.test(s)){mult=1e3;s=s.slice(0,-1)}else if(/mil$/.test(s)){mult=1e3;s=s.slice(0,-3)}else if(/(m|palos?|millones?)$/.test(s)){mult=1e6;s=s.replace(/(m|palos?|millones?)$/,'')}
+  let neg=false;if(/^[-−]/.test(s)){neg=true;s=s.slice(1)}else if(s[0]==='+')s=s.slice(1);
+  if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');
+  if(!/^(\d+\.?\d*|\.\d+)$/.test(s))return NaN;
+  const v=parseFloat(s)*mult;return neg?-v:v;
+}
+function fmtAns(q,v){
+  if(q.unit==='$')return '$'+fmt(v);
+  if(q.unit==='US$')return 'US$ '+fmt(v,Math.abs(v)<100?1:0);
+  if(q.unit==='%')return fmt(v,1)+'%';
+  return fmt(v,1)+' meses';
+}
+function judge(q,v){
+  if(v===null)return'salteada';
+  const e=Math.abs(v-q.ans);
+  const[g,o]=q.tol.abs?q.tol.abs:q.tol.rel.map(t=>t*Math.abs(q.ans));
+  if(e<=g)return'clavado';if(e<=o)return'bien';if(e<=o*2.5)return'cerca';return'mal';
+}
+const VERD={clavado:{t:'Clavado',p:10},bien:{t:'Buen redondeo',p:8},cerca:{t:'Cerca',p:4},mal:{t:'Errado',p:0},salteada:{t:'Salteada',p:0}};
+function speed(q,t){return t<=q.target?1:t<=q.target*2?.8:.6}
+function speedLabel(q,t){return t<=q.target?'rápido':t<=q.target*2?'normal':'lento'}
+
+let state={len:12,instant:false,clock:store.get('mc_clock',false),weights:null};
+let exam=[],idx=0,t0=0,raf=0,locked=false;
+
+function buildExam(len,weights){
+  const cats=Object.keys(GENS);let counts={};
+  if(weights){const tot=cats.reduce((a,c)=>a+weights[c],0);let left=len;cats.forEach(c=>{counts[c]=Math.max(1,Math.floor(len*weights[c]/tot));left-=counts[c]});
+    const order=[...cats].sort((a,b)=>weights[b]-weights[a]);let i=0;while(left>0){counts[order[i%order.length]]++;left--;i++}while(left<0){const c=order[order.length-1-(i%order.length)];if(counts[c]>1){counts[c]--;left++}i++}}
+  else cats.forEach(c=>counts[c]=len/4);
+  const qs=[];cats.forEach(c=>{const pool=shuffle([...GENS[c]]);for(let i=0;i<counts[c];i++){const g=pool[i%pool.length];const q=G[g]();q.idea=IDEAS[g];qs.push(q)}});
+  return shuffle(qs);
+}
+
+function home(){
+  cancelAnimationFrame(raf);
+  const hist=store.get('mc_hist',[]);
+  app.innerHTML=`
+  <header class="hero">
+    <span class="eyebrow">Entrenamiento de cuentas rápidas</span>
+    <h1>Matemática <span>callejera</span></h1>
+    <p class="muted">Ofertas, dólar, inflación y cuentas del día a día. Respondés con un número, sin opciones para adivinar. Cuenta el tiempo: redondear rápido vale más que clavar el centavo tarde.</p>
+  </header>
+  <section class="panel">
+    <h3>Cantidad de ejercicios</h3>
+    <div class="seg" role="group" aria-label="Cantidad de ejercicios">
+      ${[8,12,16].map(n=>`<button class="${state.len===n?'sel':''}" data-len="${n}">${n}</button>`).join('')}
+    </div>
+    <label class="check"><input type="checkbox" id="instant" ${state.instant?'checked':''}><span>Ver la solución después de cada ejercicio <span class="muted">(modo práctica; si no, todo el feedback va al final)</span></span></label>
+    <label class="check"><input type="checkbox" id="clockopt" ${state.clock?'checked':''}><span>Mostrar cronómetro <span class="muted">(el tiempo se mide igual aunque no lo veas)</span></span></label>
+    <button class="primary" id="go">Empezar examen</button>
+  </section>
+  <section class="panel">
+    <h3>Cómo se puntúa</h3>
+    <dl class="rules">
+      <dt>Clavado</dt><dd>Dentro de ~2% del resultado exacto · 10 pts</dd>
+      <dt>Buen redondeo</dt><dd>Dentro de ~5%. Esto ya es éxito callejero · 8 pts</dd>
+      <dt>Cerca</dt><dd>Orden de magnitud correcto · 4 pts</dd>
+      <dt>Tiempo</dt><dd>Bajo el objetivo ×1 · hasta el doble ×0,8 · más ×0,6</dd>
+    </dl>
+    <p class="hint">Escribí como quieras: 35.000, 35000, 35k, 19,4. Los % sin el signo.</p>
+  </section>
+  ${hist.length?`<section class="panel"><h3>Tus últimos intentos</h3><div class="hist">${hist.slice(-5).reverse().map(h=>`<div><span class="num">${h.score}</span> pts · ${h.n} ejercicios · ${h.date}</div>`).join('')}</div></section>`:''}`;
+  app.querySelectorAll('[data-len]').forEach(b=>b.onclick=()=>{state.len=+b.dataset.len;home()});
+  $('#instant').onchange=e=>state.instant=e.target.checked;
+  $('#clockopt').onchange=e=>{state.clock=e.target.checked;store.set('mc_clock',state.clock)};
+  $('#go').onclick=()=>start(null);
+}
+
+function start(weights){exam=buildExam(state.len,weights);idx=0;question()}
+
+function question(){
+  const q=exam[idx];locked=false;
+  app.innerHTML=`
+  <div class="progress"><span class="eyebrow">Ejercicio ${idx+1} de ${exam.length}</span>
+    <div class="dots" aria-hidden="true">${exam.map((_,i)=>`<i class="${i<idx?'done':i===idx?'now':''}"></i>`).join('')}</div></div>
+  <article class="tag"><div class="band">${CATS[q.cat].name}</div><div class="q">${q.prompt}</div></article>
+  ${state.clock?`<div class="timer"><div class="row"><span class="clock num" id="clock">0 s</span><span class="hint">objetivo: ${q.target} s</span></div></div>`:''}
+  <form id="f" class="panel" autocomplete="off">
+    <div class="answer"><label class="field" for="ans"><span>${q.unit==='meses'?'':q.unit==='%'?'':q.unit}</span><input id="ans" inputmode="decimal" enterkeyhint="done" aria-label="Tu respuesta" placeholder="tu cuenta"><span>${q.unit==='%'?'%':q.unit==='meses'?'meses':''}</span></label></div>
+    <p class="err" id="err" hidden></p>
+    <div class="actions"><button type="submit" class="primary">Responder</button><button type="button" class="ghost" id="skip">No sé, paso</button></div>
+  </form>
+  <div id="fb"></div>`;
+  const inp=$('#ans');setTimeout(()=>inp.focus(),50);
+  t0=performance.now();
+  const clock=$('#clock');
+  if(clock){let last=-1;const tick=()=>{const t=Math.floor((performance.now()-t0)/1000);if(t!==last){clock.textContent=t+' s';last=t}raf=requestAnimationFrame(tick)};tick()}
+  $('#f').onsubmit=e=>{e.preventDefault();if(locked)return;const v=parseNum(inp.value);if(inp.value.trim()===''||isNaN(v)){const er=$('#err');er.hidden=false;er.textContent='No entendí el número. Probá con 35.000, 35k o 19,4.';return}answer(v)};
+  $('#skip').onclick=()=>{if(!locked)answer(null)};
+}
+
+function answer(v){
+  locked=true;cancelAnimationFrame(raf);
+  const q=exam[idx];q.time=(performance.now()-t0)/1000;q.user=v;q.verdict=judge(q,v);q.points=VERD[q.verdict].p*speed(q,q.time);
+  const next=()=>{idx++;idx<exam.length?question():results()};
+  if(!state.instant){next();return}
+  $('#f').querySelectorAll('input,button').forEach(el=>el.disabled=true);
+  $('#fb').innerHTML=`<section class="panel">${itemInner(q)}<button class="primary" id="nx">${idx+1<exam.length?'Siguiente':'Ver resultados'}</button></section>`;
+  const nx=$('#nx');nx.onclick=next;nx.focus();
+}
+
+function itemInner(q,i){
+  const err=q.user===null?'—':q.unit==='%'||q.unit==='meses'?(q.user-q.ans>=0?'+':'')+fmt(q.user-q.ans,1)+(q.unit==='%'?' pts':' m'):(q.user-q.ans>=0?'+':'')+fmt((q.user-q.ans)/Math.abs(q.ans)*100,1)+'%';
+  const open=q.verdict!=='clavado';
+  return `<div class="top"><p class="pq">${i!=null?`<span class="muted">${i+1}.</span> `:''}${q.prompt}</p><span class="chip v-${q.verdict}">${VERD[q.verdict].t}</span></div>
+  <div class="cmp"><div><small>Tu respuesta</small><b>${q.user===null?'—':fmtAns(q,q.user)}</b></div><div><small>Exacto</small><b>${fmtAns(q,q.ans)}</b></div><div><small>Desvío · tiempo</small><b>${err} · ${fmt(q.time,1)} s</b><span class="hint">${speedLabel(q,q.time)} (obj. ${q.target} s)</span></div></div>
+  <details ${open?'open':''}><summary>Cómo pensarlo</summary><p class="idea"><b>La idea:</b> ${q.idea}</p><ol class="steps">${q.steps.map(s=>`<li>${s}</li>`).join('')}</ol></details>`;
+}
+
+function results(){
+  const n=exam.length;const score=Math.round(exam.reduce((a,q)=>a+q.points,0)/(n*10)*100);
+  const good=exam.filter(q=>q.verdict==='clavado'||q.verdict==='bien').length;
+  const avgT=exam.reduce((a,q)=>a+q.time,0)/n;
+  const onTime=exam.filter(q=>q.time<=q.target).length;
+  const byCat={};Object.keys(CATS).forEach(c=>{const qs=exam.filter(q=>q.cat===c);if(!qs.length)return;byCat[c]={n:qs.length,score:qs.reduce((a,q)=>a+q.points,0)/(qs.length*10),acc:qs.filter(q=>q.verdict==='clavado'||q.verdict==='bien').length/qs.length,slow:qs.filter(q=>q.time>q.target).length/qs.length}});
+  const cats=Object.keys(byCat).sort((a,b)=>byCat[a].score-byCat[b].score);
+  const weak=cats[0],strong=cats[cats.length-1];
+  const accR=good/n,spdR=onTime/n;
+  let profile;
+  if(accR>=.75&&spdR>=.6)profile='Estás calculando como alguien que vive regateando. Subí la dificultad: hacé los 16 y apuntá a bajar el tiempo promedio.';
+  else if(accR>=.6&&spdR<.5)profile='Llegás bien al resultado, pero tardás. Estás haciendo la cuenta exacta. Redondeá <b>antes</b> de operar (47.290 → 47.000) y aceptá un 5% de error: eso ya suma 8 de 10.';
+  else if(accR<.5&&spdR>=.6)profile='Vas rápido pero redondeás muy grueso o aplicás mal la regla. Frená dos segundos para elegir el truco correcto antes de tirar el número.';
+  else profile='Todavía estás armando las herramientas. Mirá "Cómo pensarlo" en cada ejercicio errado y repetí con "Reforzar lo flojo": las reglas son pocas y se repiten.';
+  const over=exam.filter(q=>q.user!==null&&(q.verdict==='mal'||q.verdict==='cerca'));
+  const under=over.filter(q=>q.user<q.ans).length,overN=over.length-under;
+  let bias='';if(over.length>=3){bias=under>overN*2?'Tus errores tienden a quedarse cortos: típico de sumar % en vez de componerlos o de olvidar las unidades sueltas.':overN>under*2?'Tus errores tienden a pasarse: típico de restar 21% de IVA en vez de dividir, o de no ajustar el dólar redondo.':''}
+  const hist=store.get('mc_hist',[]);const now=new Date();hist.push({score,n,date:now.toLocaleDateString('es-AR')+' '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})});store.set('mc_hist',hist.slice(-20));
+  const prev=hist.length>1?hist[hist.length-2].score:null;
+  app.innerHTML=`
+  <header class="hero"><span class="eyebrow">Resultado</span>
+    <div class="score"><span class="big num">${score}</span><span class="muted" style="padding-bottom:10px">/ 100 ${prev!==null?`· antes ${prev}`:''}</span></div></header>
+  <section class="panel">
+    <div class="stats"><div class="stat"><small>Precisión</small><b>${good}/${n}</b></div><div class="stat"><small>A tiempo</small><b>${onTime}/${n}</b></div><div class="stat"><small>Promedio</small><b>${fmt(avgT,1)} s</b></div></div>
+    <div class="diag"><p>${profile}</p>${bias?`<p>${bias}</p>`:''}</div>
+  </section>
+  <section class="panel"><h2>Por tema</h2>
+    <div class="cats">${cats.map(c=>`<div class="cat"><span>${CATS[c].name}</span><div class="meter"><i style="width:${Math.round(byCat[c].score*100)}%"></i></div><span class="num">${Math.round(byCat[c].score*100)}</span></div>`).join('')}</div>
+    ${byCat[weak].score<.85?`<div class="diag"><p><b>Tu punto flojo: ${CATS[weak].name}.</b> ${byCat[weak].slow>.5?'Más de la mitad la resolviste lento. ':''}La regla para llevarte:</p><p>${CATS[weak].rule}</p></div>`:''}
+    ${weak!==strong?`<p class="hint">Tu fuerte: ${CATS[strong].name}.</p>`:''}
+  </section>
+  <div class="actions"><button class="primary" id="weak">Reforzar lo flojo</button><button id="again">Otro examen</button></div>
+  <section class="items"><h2>Ejercicio por ejercicio</h2>${exam.map((q,i)=>`<article class="item">${itemInner(q,i)}</article>`).join('')}</section>
+  <section class="panel"><h2>La chuleta</h2><dl class="rules">${Object.values(CATS).map(c=>`<dt>${c.name}</dt><dd>${c.rule}</dd>`).join('')}<dt>Siempre</dt><dd>Redondeá a 2 cifras antes de operar. Operá. Ajustá al final para el lado que corresponde.</dd></dl></section>
+  <button class="ghost" id="home">Volver al inicio</button>`;
+  window.scrollTo(0,0);
+  $('#again').onclick=()=>start(null);
+  $('#home').onclick=home;
+  $('#weak').onclick=()=>{const w={};Object.keys(CATS).forEach(c=>w[c]=byCat[c]?1+(1-byCat[c].score)*4:1);start(w)};
+}
+
+home();
+})();
+</script>
+
+</body>
+</html>
